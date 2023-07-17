@@ -9,7 +9,6 @@ const dbPath = path.join(__dirname, "userData.db");
 const app = express();
 app.use(express.json());
 
-
 let database = null;
 
 const initializeDbAndServer = async () => {
@@ -18,9 +17,9 @@ const initializeDbAndServer = async () => {
       filename: dbPath,
       driver: sqlite3.Database,
     });
-    app.listen(3000, () => 
+    app.listen(3000, () => {
       console.log("Server Running at http://localhost:3000/");
-    );
+    });
   } catch (e) {
     console.log(`DB Error: ${error.message}`);
     process.exit(1);
@@ -54,7 +53,7 @@ app.post("/register", async (request, response) => {
             '${hashedPassword}',
             '${gender}',
             '${location}'
-            );`;
+        );`;
     if (validatePassword(password)) {
       await database.run(createUserQuery);
       response.send("User created successfully");
@@ -100,32 +99,32 @@ app.put("/change-password", async (request, response) => {
   const { username, oldPassword, newPassword } = request.body;
   const updateUserQuery = `
     SELECT * FROM user WHERE username = '${username}';`;
-    const dbUser = await database.get(updateUserQuery);
+  const dbUser = await database.get(updateUserQuery);
 
-    if (dbUser === undefined){
-        response.status(400);
-        response.send("Invalid User");
-    } else {
-        const isPasswordMatched = await bcrypt.compare(password, dbUser.password);
-        if (isPasswordMatched === true){
-            if (validatePassword(newPassword)) => {
-                const hashedPassword = await bcrypt.hash(newPassword, 10);
-                const updatePassword = `
+  if (dbUser === undefined) {
+    response.status(400);
+    response.send("Invalid User");
+  } else {
+    const isPasswordMatched = await bcrypt.compare(password, dbUser.password);
+    if (isPasswordMatched === true) {
+      if (validatePassword(newPassword)) {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const updatePassword = `
                 UPDATE user
                 SET password = '${hashedPassword}'
                 WHERE username = '${username}';`;
 
-                const user = await database.run(updateUserQuery);
-                response.send("Password updated");
-            } else{
-                response.status(400);
-                response.send("Password is too short");
-            }
-        }   else {
-            response.status(400);
-            response.send("Invalid current password");
-        }
+        const user = await database.run(updateUserQuery);
+        response.send("Password updated");
+      } else {
+        response.status(400);
+        response.send("Password is too short");
+      }
+    } else {
+      response.status(400);
+      response.send("Invalid current password");
     }
+  }
 });
 
 module.exports = app;
