@@ -35,7 +35,7 @@ const validatePassword = (password) => {
 
 app.post("/register", async (request, response) => {
   const { username, name, password, gender, location } = request.body;
-  const hashedPassword = bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const selectUserQuery = `
     SELECT * 
@@ -76,7 +76,7 @@ app.post("/login", async (request, response) => {
     SELECT * 
     FROM user
     WHERE username = '${username}'`;
-  const dbUser = await db.get(selectUserQuery);
+  const dbUser = await database.get(selectUserQuery);
 
   if (dbUser === undefined) {
     response.status(400);
@@ -103,9 +103,12 @@ app.put("/change-password", async (request, response) => {
 
   if (dbUser === undefined) {
     response.status(400);
-    response.send("Invalid User");
+    response.send("Invalid user");
   } else {
-    const isPasswordMatched = await bcrypt.compare(password, dbUser.password);
+    const isPasswordMatched = await bcrypt.compare(
+      oldPassword,
+      dbUser.password
+    );
     if (isPasswordMatched === true) {
       if (validatePassword(newPassword)) {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -114,7 +117,7 @@ app.put("/change-password", async (request, response) => {
                 SET password = '${hashedPassword}'
                 WHERE username = '${username}';`;
 
-        const user = await database.run(updateUserQuery);
+        const user = await database.run(updatePassword);
         response.send("Password updated");
       } else {
         response.status(400);
