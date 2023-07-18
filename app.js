@@ -28,7 +28,7 @@ const initializeDbAndServer = async () => {
 initializeDbAndServer();
 
 const validatePassword = (password) => {
-  return password.length < 5;
+  return password.length > 4;
 };
 
 //Register user
